@@ -83,13 +83,16 @@ async function resetVis(){
     const testMesh = new THREE.Mesh(testCube, testMaterial);*/
     //scene.add(testMesh);
 
+    /*
     let boxWidth = volume.width/volume.max;
     let boxHeight = volume.height/volume.max;
     let boxDepth = volume.depth/volume.max;
 
     console.log(boxWidth + "-" + boxHeight + "-" + boxDepth);
+    */
 
-    const boundingBoxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    //const boundingBoxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    const boundingBoxGeometry = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
     const rainbowBoxMaterial = firstPassShader.material;
 
     await firstPassShader.load();
@@ -99,7 +102,7 @@ async function resetVis(){
 
 
     // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*(Math.max(Math.max(boxWidth, boxHeight), boxDepth)), renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
 
     // init paint loop
     requestAnimationFrame(paint);
