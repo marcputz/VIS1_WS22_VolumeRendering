@@ -14,12 +14,14 @@
  * @author Laura Luidolt
  * @author Diana Schalko
  */
-let renderer, camera, scene, orbitCamera;
+let renderer, camera, scene, orbitCamera, frontFaceScene, backFaceScene;
+let frontFace, backFace;
 let canvasWidth, canvasHeight = 0;
 let container = null;
 let volume = null;
 let fileInput = null;
 let testShader = null;
+let firstPassShader = null;
 
 /**
  * Load all data and initialize UI here.
@@ -35,12 +37,15 @@ function init() {
     renderer.setSize( canvasWidth, canvasHeight );
     container.appendChild( renderer.domElement );
 
+    frontFace = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+    backFace = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+
     // read and parse volume file
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
-    // dummy shader gets a color as input
     testShader = new TestShader([255.0, 255.0, 0.0]);
+    firstPassShader = new FirstPassShader([0.0, 255.0, 0.0]);
 }
 
 /**
@@ -67,17 +72,34 @@ function readFile(){
 async function resetVis(){
     // create new empty scene and perspective camera
     scene = new THREE.Scene();
+    frontFaceScene = new THREE.Scene();
+    backFaceScene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera( 75, canvasWidth / canvasHeight, 0.1, 1000 );
 
     // dummy scene: we render a box and attach our color test shader as material
-    const testCube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
+    /*const testCube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
     const testMaterial = testShader.material;
     await testShader.load(); // this function needs to be called explicitly, and only works within an async function!
-    const testMesh = new THREE.Mesh(testCube, testMaterial);
-    scene.add(testMesh);
+    const testMesh = new THREE.Mesh(testCube, testMaterial);*/
+    //scene.add(testMesh);
+
+    let boxWidth = volume.width/volume.max;
+    let boxHeight = volume.height/volume.max;
+    let boxDepth = volume.depth/volume.max;
+
+    console.log(boxWidth + "-" + boxHeight + "-" + boxDepth);
+
+    const boundingBoxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    const rainbowBoxMaterial = firstPassShader.material;
+
+    await firstPassShader.load();
+
+    const coloredBoundingBox = new THREE.Mesh(boundingBoxGeometry, rainbowBoxMaterial);
+    frontFaceScene.add(coloredBoundingBox);
+
 
     // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*(Math.max(Math.max(boxWidth, boxHeight), boxDepth)), renderer.domElement);
 
     // init paint loop
     requestAnimationFrame(paint);
@@ -88,6 +110,11 @@ async function resetVis(){
  */
 function paint(){
     if (volume) {
-        renderer.render(scene, camera);
+        //renderer.setRenderTarget(backFace);
+        //renderer.render(backFaceScene, camera);
+        //renderer.setRenderTarget(frontFace);
+        renderer.render(frontFaceScene, camera);
+        // renderer.setRenderTarget(null);
+        // renderer.render(scene, camera);
     }
 }

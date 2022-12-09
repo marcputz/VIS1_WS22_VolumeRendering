@@ -22,6 +22,7 @@ class Shader {
             uniforms: {},
             transparent: true
         });
+        this.material.vertexColors = true;
     }
 
     async #loadShader(shader, name){
