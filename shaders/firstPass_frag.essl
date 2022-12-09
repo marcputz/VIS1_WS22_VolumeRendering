@@ -1,8 +1,4 @@
 precision highp float;
-precision highp int;
-
-uniform vec3 color[2];
-uniform int colorIdx;
 
 varying vec4 vColor;
 

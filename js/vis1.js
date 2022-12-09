@@ -21,7 +21,8 @@ let container = null;
 let volume = null;
 let fileInput = null;
 let testShader = null;
-let firstPassShader = null;
+let firstPassFrontShader = null;
+let firstPassBackShader = null;
 
 /**
  * Load all data and initialize UI here.
@@ -44,8 +45,9 @@ function init() {
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
-    testShader = new TestShader([255.0, 255.0, 0.0]);
-    firstPassShader = new FirstPassShader([0.0, 255.0, 0.0]);
+    //testShader = new TestShader([255.0, 255.0, 0.0]);
+    firstPassFrontShader = new FirstPassShader(THREE.FrontSide);
+    firstPassBackShader = new FirstPassShader(THREE.BackSide);
 }
 
 /**
@@ -83,22 +85,17 @@ async function resetVis(){
     const testMesh = new THREE.Mesh(testCube, testMaterial);*/
     //scene.add(testMesh);
 
-    /*
-    let boxWidth = volume.width/volume.max;
-    let boxHeight = volume.height/volume.max;
-    let boxDepth = volume.depth/volume.max;
-
-    console.log(boxWidth + "-" + boxHeight + "-" + boxDepth);
-    */
-
     //const boundingBoxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
     const boundingBoxGeometry = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
-    const rainbowBoxMaterial = firstPassShader.material;
+    const backSideBoxMaterial = firstPassBackShader.material;
+    await firstPassBackShader.load();
+    const backSideBoundingBox = new THREE.Mesh(boundingBoxGeometry, backSideBoxMaterial);
+    backFaceScene.add(backSideBoundingBox);
 
-    await firstPassShader.load();
-
-    const coloredBoundingBox = new THREE.Mesh(boundingBoxGeometry, rainbowBoxMaterial);
-    frontFaceScene.add(coloredBoundingBox);
+    const frontSideBoxMaterial = firstPassFrontShader.material;
+    await firstPassFrontShader.load();
+    const frontSideBoundingBox = new THREE.Mesh(boundingBoxGeometry, frontSideBoxMaterial);
+    frontFaceScene.add(frontSideBoundingBox);
 
 
     // our camera orbits around an object centered at (0,0,0)
@@ -112,10 +109,12 @@ async function resetVis(){
  * Render the scene and update all necessary shader information.
  */
 function paint(){
+    renderer.clear();
     if (volume) {
-        //renderer.setRenderTarget(backFace);
-        //renderer.render(backFaceScene, camera);
-        //renderer.setRenderTarget(frontFace);
+        renderer.setRenderTarget(backFace);
+        renderer.render(backFaceScene, camera);
+
+        renderer.setRenderTarget(frontFace);
         renderer.render(frontFaceScene, camera);
         // renderer.setRenderTarget(null);
         // renderer.render(scene, camera);
