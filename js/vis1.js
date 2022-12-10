@@ -23,6 +23,7 @@ let fileInput = null;
 let testShader = null;
 let firstPassFrontShader = null;
 let firstPassBackShader = null;
+let volumetricRenderingShader = null;
 
 /**
  * Load all data and initialize UI here.
@@ -48,6 +49,7 @@ function init() {
     //testShader = new TestShader([255.0, 255.0, 0.0]);
     firstPassFrontShader = new FirstPassShader(THREE.FrontSide);
     firstPassBackShader = new FirstPassShader(THREE.BackSide);
+    volumetricRenderingShader = new VolumetricRenderingShader();
 }
 
 /**
@@ -85,8 +87,9 @@ async function resetVis(){
     const testMesh = new THREE.Mesh(testCube, testMaterial);*/
     //scene.add(testMesh);
 
-    //const boundingBoxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
     const boundingBoxGeometry = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
+    //boundingBoxGeometry.translate( volume.width / 2 - 0.5, volume.height / 2 - 0.5, volume.depth / 2 - 0.5 );
+
     const backSideBoxMaterial = firstPassBackShader.material;
     await firstPassBackShader.load();
     const backSideBoundingBox = new THREE.Mesh(boundingBoxGeometry, backSideBoxMaterial);
@@ -97,6 +100,11 @@ async function resetVis(){
     const frontSideBoundingBox = new THREE.Mesh(boundingBoxGeometry, frontSideBoxMaterial);
     frontFaceScene.add(frontSideBoundingBox);
 
+    const boundingBoxMaterial = volumetricRenderingShader.material;
+    await volumetricRenderingShader.load();
+    volumetricRenderingShader.setUniform("volume", volume);
+    const boundingBox = new THREE.Mesh(boundingBoxGeometry, boundingBoxMaterial);
+    scene.add(boundingBox);
 
     // our camera orbits around an object centered at (0,0,0)
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
@@ -109,14 +117,16 @@ async function resetVis(){
  * Render the scene and update all necessary shader information.
  */
 function paint(){
-    renderer.clear();
     if (volume) {
         renderer.setRenderTarget(backFace);
         renderer.render(backFaceScene, camera);
-
         renderer.setRenderTarget(frontFace);
         renderer.render(frontFaceScene, camera);
-        // renderer.setRenderTarget(null);
-        // renderer.render(scene, camera);
+
+        volumetricRenderingShader.setUniform("boundingBoxBackFace", backFace.texture);
+        volumetricRenderingShader.setUniform("boundingBoxFrontFace", frontFace.texture);
+
+        renderer.setRenderTarget(null);
+        renderer.render(scene, camera);
     }
 }

@@ -1,0 +1,14 @@
+precision highp float;
+
+uniform mat2 boundingBoxBackFace;
+uniform mat2 boundingBoxFrontFace;
+uniform mat3 volume;
+
+varying vec4 vColor;
+
+void main(){
+
+    vec4 myColor = vColor;
+
+    gl_FragColor = myColor;
+}
