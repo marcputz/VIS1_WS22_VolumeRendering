@@ -12,6 +12,8 @@ varying vec4 vertexLocalPosition;
 varying vec4 vertexWorldPosition;
 varying vec3 positionNearColor;
 varying vec4 positionNear;
+// NEW
+varying vec4 positionFar;
 
 const int MAX_STEPS = 2048;
 const float STEP_SIZE = 1.0;
@@ -20,20 +22,52 @@ void raycast_mip(vec3 startPos, vec3 step, int steps, vec3 rayDirection);
 float getDensity(vec3 dataPosition);
 
 void main(){
+    /* OLD
     vec3 ray_direction = normalize(positionNear.xyz - camera_position);
-
     float distance = dot(positionNear.xyz - vertexLocalPosition.xyz, ray_direction);
+    */
+    // NEW
+    vec3 ray_direction = normalize(positionNear.xyz/positionNear.w - positionFar.xyz/positionFar.w);
+    float distance = dot(positionNear.xyz/positionNear.w - vertexLocalPosition.xyz, ray_direction);
 
     // Now we have the starting position on the front surface
     vec3 front = vertexLocalPosition.xyz + (ray_direction * distance);
-
     vec3 ray = vertexLocalPosition.xyz - front;
 
-    gl_FragColor = vec4(ray, 1.0);
+    // NEW
+    int nSteps = int(-distance / STEP_SIZE + 0.5);
+    if (nSteps < 1) { discard; }
+    vec3 step = ((vertexLocalPosition.xyz - front) / vec3(xWidth, yHeight, zDepth)) / float(nSteps);
+    vec3 startLoc = front / vec3(xWidth, yHeight, zDepth);
+    raycast_mip(startLoc, step, nSteps, ray);
+    if (gl_FragColor.a < 0.05) {
+        discard;
+    }
+
+    //gl_FragColor = vec4(ray, 1.0);
 }
 
 void raycast_mip(vec3 startPos, vec3 step, int steps, vec3 rayDirection) {
+    // NEW
+    float maxVal = -1e6;
+    int maxI = 100;
+    vec3 loc = startPos;
+    vec3 locColor;
 
+    for (int i = 0; i < MAX_STEPS; i++) {
+        if (i >= steps) {
+            break;
+        }
+        float val = getDensity(loc);
+        if (val > maxVal) {
+            maxVal = val;
+            maxI = i;
+            locColor = loc;
+        }
+        loc += step;
+    }
+
+    gl_FragColor = vec4(vec3(1.0, 1.0, 1.0) * maxVal, 1.0);
 }
 
 float getDensity(vec3 dataPosition) {

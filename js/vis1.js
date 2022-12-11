@@ -85,7 +85,7 @@ async function resetVis(){
     texture3d.needsUpdate = true;
 
     // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 1.5, renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
 
     // Set Shader Uniforms according to volume
     await volumetricRenderingShader.load();
@@ -97,8 +97,14 @@ async function resetVis(){
     // Only render the back side of the bounding box (the back side is used as a reference point)
     volumetricRenderingShader.material.side = THREE.BackSide;
 
+    /* OLD
     const boundingBoxGeometry = new THREE.BoxGeometry(1.0, 1.0, 1.0);
     // boundingBoxGeometry.translate( volume.width / 2 - 0.5, volume.height / 2 - 0.5, volume.depth / 2 - 0.5 );
+    */
+    // NEW
+    const boundingBoxGeometry = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
+    boundingBoxGeometry.translate( volume.width / 2 - 0.5, volume.height / 2 - 0.5, volume.depth / 2 - 0.5 );
+
     const boundingBox = new THREE.Mesh(boundingBoxGeometry, volumetricRenderingShader.material);
     scene.add(boundingBox);
 

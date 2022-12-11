@@ -5,6 +5,8 @@ varying vec4 vertexLocalPosition;
 varying vec4 vertexWorldPosition;
 varying vec3 positionNearColor;
 varying vec4 positionNear;
+// NEW
+varying vec4 positionFar;
 
 void main() {
     positionColor = clamp(position, 0.0, 1.0);
@@ -23,6 +25,9 @@ void main() {
     position_in_camera.z = -position_in_camera.w;
     positionNear = mvMatrixInversed * position_in_camera;
     positionNearColor = clamp(positionNear.xyz, 0.0, 1.0);
+    // NEW
+    position_in_camera.z = position_in_camera.w;
+    positionFar = mvMatrixInversed * position_in_camera;
 
     gl_Position = projectionMatrix * modelMatrix * viewMatrix * position4;
     return;
