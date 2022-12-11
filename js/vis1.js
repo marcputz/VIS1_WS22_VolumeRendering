@@ -14,15 +14,11 @@
  * @author Laura Luidolt
  * @author Diana Schalko
  */
-let renderer, camera, scene, orbitCamera, frontFaceScene, backFaceScene;
-let frontFace, backFace;
+let renderer, camera, scene, orbitCamera;
 let canvasWidth, canvasHeight = 0;
 let container = null;
 let volume = null;
 let fileInput = null;
-let testShader = null;
-let firstPassFrontShader = null;
-let firstPassBackShader = null;
 let volumetricRenderingShader = null;
 
 /**
@@ -39,16 +35,11 @@ function init() {
     renderer.setSize( canvasWidth, canvasHeight );
     container.appendChild( renderer.domElement );
 
-    frontFace = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-    backFace = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-
     // read and parse volume file
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
     //testShader = new TestShader([255.0, 255.0, 0.0]);
-    firstPassFrontShader = new FirstPassShader(THREE.FrontSide);
-    firstPassBackShader = new FirstPassShader(THREE.BackSide);
     volumetricRenderingShader = new VolumetricRenderingShader();
 }
 
@@ -71,13 +62,11 @@ function readFile(){
 /**
  * Construct the THREE.js scene and update histogram when a new volume is loaded by the user.
  *
- * Currently renders the bounding box of the volume.
+ * Currently, renders the bounding box of the volume.
  */
 async function resetVis(){
     // create new empty scene and perspective camera
     scene = new THREE.Scene();
-    frontFaceScene = new THREE.Scene();
-    backFaceScene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera( 75, canvasWidth / canvasHeight, 0.1, 1000 );
 
     // dummy scene: we render a box and attach our color test shader as material
@@ -87,27 +76,31 @@ async function resetVis(){
     const testMesh = new THREE.Mesh(testCube, testMaterial);*/
     //scene.add(testMesh);
 
-    const boundingBoxGeometry = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
-    //boundingBoxGeometry.translate( volume.width / 2 - 0.5, volume.height / 2 - 0.5, volume.depth / 2 - 0.5 );
-
-    const backSideBoxMaterial = firstPassBackShader.material;
-    await firstPassBackShader.load();
-    const backSideBoundingBox = new THREE.Mesh(boundingBoxGeometry, backSideBoxMaterial);
-    backFaceScene.add(backSideBoundingBox);
-
-    const frontSideBoxMaterial = firstPassFrontShader.material;
-    await firstPassFrontShader.load();
-    const frontSideBoundingBox = new THREE.Mesh(boundingBoxGeometry, frontSideBoxMaterial);
-    frontFaceScene.add(frontSideBoundingBox);
-
-    const boundingBoxMaterial = volumetricRenderingShader.material;
-    await volumetricRenderingShader.load();
-    volumetricRenderingShader.setUniform("volume", volume);
-    const boundingBox = new THREE.Mesh(boundingBoxGeometry, boundingBoxMaterial);
-    scene.add(boundingBox);
+    // Prepare Volume-Data as 3D Texture
+    const texture3d = new THREE.Data3DTexture(volume.voxels, volume.width, volume.height, volume.depth);
+    texture3d.format = THREE.RedFormat;
+    texture3d.type = THREE.FloatType;
+    // texture3d.minFilter = texture3d.magFilter = THREE.LinearFilter;
+    // texture3d.unpackAlignment = 1;
+    texture3d.needsUpdate = true;
 
     // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 1.5, renderer.domElement);
+
+    // Set Shader Uniforms according to volume
+    await volumetricRenderingShader.load();
+    volumetricRenderingShader.setUniform('data', texture3d);
+    volumetricRenderingShader.setUniform('camera_position', camera.position);
+    volumetricRenderingShader.setUniform('xWidth', volume.width);
+    volumetricRenderingShader.setUniform('yHeight', volume.height);
+    volumetricRenderingShader.setUniform('zDepth', volume.depth);
+    // Only render the back side of the bounding box (the back side is used as a reference point)
+    volumetricRenderingShader.material.side = THREE.FrontSide;
+
+    const boundingBoxGeometry = new THREE.BoxGeometry(1.0, 1.0, 1.0);
+    // boundingBoxGeometry.translate( volume.width / 2 - 0.5, volume.height / 2 - 0.5, volume.depth / 2 - 0.5 );
+    const boundingBox = new THREE.Mesh(boundingBoxGeometry, volumetricRenderingShader.material);
+    scene.add(boundingBox);
 
     // init paint loop
     requestAnimationFrame(paint);
@@ -118,14 +111,6 @@ async function resetVis(){
  */
 function paint(){
     if (volume) {
-        renderer.setRenderTarget(backFace);
-        renderer.render(backFaceScene, camera);
-        renderer.setRenderTarget(frontFace);
-        renderer.render(frontFaceScene, camera);
-
-        volumetricRenderingShader.setUniform("boundingBoxBackFace", backFace.texture);
-        volumetricRenderingShader.setUniform("boundingBoxFrontFace", frontFace.texture);
-
         renderer.setRenderTarget(null);
         renderer.render(scene, camera);
     }
