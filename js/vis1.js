@@ -95,7 +95,7 @@ async function resetVis(){
     volumetricRenderingShader.setUniform('yHeight', volume.height);
     volumetricRenderingShader.setUniform('zDepth', volume.depth);
     // Only render the back side of the bounding box (the back side is used as a reference point)
-    volumetricRenderingShader.material.side = THREE.FrontSide;
+    volumetricRenderingShader.material.side = THREE.BackSide;
 
     const boundingBoxGeometry = new THREE.BoxGeometry(1.0, 1.0, 1.0);
     // boundingBoxGeometry.translate( volume.width / 2 - 0.5, volume.height / 2 - 0.5, volume.depth / 2 - 0.5 );

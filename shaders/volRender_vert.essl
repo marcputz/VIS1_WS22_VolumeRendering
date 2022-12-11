@@ -20,8 +20,8 @@ void main() {
     vec4 position_in_camera = viewMatrix * position_in_world;
 
     // Look for position on the cameras near plane (z = -1)
-    position_in_camera.z = -1.0;
-    positionNear = projectionMatrix * position_in_camera;
+    position_in_camera.z = -position_in_camera.w;
+    positionNear = mvMatrixInversed * position_in_camera;
     positionNearColor = clamp(positionNear.xyz, 0.0, 1.0);
 
     gl_Position = projectionMatrix * modelMatrix * viewMatrix * position4;

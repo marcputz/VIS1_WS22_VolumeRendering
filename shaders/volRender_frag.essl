@@ -22,7 +22,14 @@ float getDensity(vec3 dataPosition);
 void main(){
     vec3 ray_direction = normalize(positionNear.xyz - camera_position);
 
-    gl_FragColor = vec4(ray_direction, 1.0);
+    float distance = dot(positionNear.xyz - vertexLocalPosition.xyz, ray_direction);
+
+    // Now we have the starting position on the front surface
+    vec3 front = vertexLocalPosition.xyz + (ray_direction * distance);
+
+    vec3 ray = vertexLocalPosition.xyz - front;
+
+    gl_FragColor = vec4(ray, 1.0);
 }
 
 void raycast_mip(vec3 startPos, vec3 step, int steps, vec3 rayDirection) {
