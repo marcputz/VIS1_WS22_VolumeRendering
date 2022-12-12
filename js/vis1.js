@@ -25,7 +25,6 @@ let backSide, frontSide;
 let backSideShader, frontSideShader;
 
 let compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
-let isoValue = 0.3;
 
 /**
  * Load all data and initialize UI here.
@@ -98,9 +97,7 @@ async function resetVis(){
 
     // Prepare Shader
     volumetricRenderingShader.setCompositingMethod(compositingMethod);
-    if (compositingMethod === VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT) {
-        volumetricRenderingShader.setIsoValue(parseFloat(document.getElementsByName('iso_value')[0].value));
-    }
+    volumetricRenderingShader.setIsoValue(0.3); // Standard Value
 
     // Set Shader Uniforms according to volume
     await volumetricRenderingShader.load();
@@ -164,9 +161,6 @@ function onChangeCompositing() {
     }
 
     volumetricRenderingShader.setCompositingMethod(compositingMethod);
-    if (compositingMethod === VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT) {
-        volumetricRenderingShader.setIsoValue(isoValue);
-    }
 
     paint();
 }
