@@ -25,7 +25,7 @@ let backSide, frontSide;
 let backSideShader, frontSideShader;
 
 let compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
-let isoValue = 0.9;
+let isoValue = 0.3;
 
 /**
  * Load all data and initialize UI here.

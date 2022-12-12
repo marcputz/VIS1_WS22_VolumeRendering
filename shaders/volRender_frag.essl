@@ -135,7 +135,7 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
         prevDensity = getDensity(prevPos);
         currDensity = getDensity(currPos);
 
-        if (currDensity >= iso_value) {
+        if (currDensity >= float(iso_value)) {
 
             float ratio = (iso_value - prevDensity) / (currDensity - iso_value);
             vec3 interpolatedPos = prevPos + (step * ratio);
