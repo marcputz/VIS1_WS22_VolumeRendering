@@ -10,9 +10,11 @@ uniform float volumeScale;
 
 uniform int raycasting_method;
 uniform float iso_value;
+uniform int doRefinement;
 
 const int MAX_STEPS = 1024;
-const float STEP_SIZE = 0.2;
+const float STEP_SIZE = 0.5;
+const int REFINE_STEPS = 8;
 
 vec3 getBackSideCoords(vec2 fragCoords);
 vec3 getFrontSideCoords(vec2 fragCoords);
@@ -85,7 +87,8 @@ float raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
 
     float maxVal = -1e6;
     vec3 loc = startPos;
-    vec3 locColor;
+    vec3 maxValLoc;
+    vec3 step = (rayDirection * (STEP_SIZE / volumeScale));
 
     for (int i = 0; i < MAX_STEPS; i++) {
         if (i >= nSteps) {
@@ -94,9 +97,19 @@ float raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
         float val = getDensity(loc);
         if (val > maxVal) {
             maxVal = val;
-            locColor = loc;
+            maxValLoc = loc;
         }
-        loc += (rayDirection * (STEP_SIZE / volumeScale));
+        loc += step;
+    }
+
+    if (doRefinement == 1) {
+        vec3 refStep = step / float(REFINE_STEPS);
+        vec3 refLoc = maxValLoc - refStep * (float(REFINE_STEPS) / 2.0);
+
+        for (int i = 0; i < REFINE_STEPS; i++) {
+            maxVal = max(maxVal, getDensity(refLoc));
+            refLoc += refStep;
+        }
     }
 
     return maxVal;

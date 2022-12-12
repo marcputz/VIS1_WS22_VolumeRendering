@@ -85,6 +85,8 @@ async function resetVis(){
     texture3d.format = THREE.RedFormat;
     texture3d.type = THREE.FloatType;
     texture3d.needsUpdate = true;
+    texture3d.minFilter = THREE.LinearFilter;
+    texture3d.magFilter = THREE.LinearFilter;
 
     // our camera orbits around an object centered at (0,0,0)
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
@@ -95,6 +97,7 @@ async function resetVis(){
     volumetricRenderingShader.setUniform('canvasWidth', canvasWidth);
     volumetricRenderingShader.setUniform('canvasHeight', canvasHeight);
     volumetricRenderingShader.setUniform('volumeScale', volume.max);
+    volumetricRenderingShader.setUniform('doRefinement', 1);
 
     await frontSideShader.load();
     await backSideShader.load();
