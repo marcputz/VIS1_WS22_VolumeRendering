@@ -24,6 +24,9 @@ let backSideScene, frontSideScene;
 let backSide, frontSide;
 let backSideShader, frontSideShader;
 
+let compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
+let isoValue = 0.9;
+
 /**
  * Load all data and initialize UI here.
  */
@@ -46,8 +49,7 @@ function init() {
     fileInput.addEventListener('change', readFile);
 
     //testShader = new TestShader([255.0, 255.0, 0.0]);
-    volumetricRenderingShader = new VolumetricRenderingShader(VolumetricRenderingShader.RAYCAST_METHOD_MIP);
-    //volumetricRenderingShader.setIsoValue(0.25);
+    volumetricRenderingShader = new VolumetricRenderingShader();
     backSideShader = new FirstPassShader(THREE.BackSide);
     frontSideShader = new FirstPassShader(THREE.FrontSide);
 }
@@ -62,6 +64,8 @@ function readFile(){
 
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
+
+        console.log('Volume Data: ', volume);
 
         resetVis();
     };
@@ -91,13 +95,19 @@ async function resetVis(){
     // our camera orbits around an object centered at (0,0,0)
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
 
+    // Prepare Shader
+    volumetricRenderingShader.setCompositingMethod(compositingMethod);
+    if (compositingMethod === VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT) {
+        volumetricRenderingShader.setIsoValue(isoValue);
+    }
+
     // Set Shader Uniforms according to volume
     await volumetricRenderingShader.load();
     volumetricRenderingShader.setUniform('data', texture3d);
     volumetricRenderingShader.setUniform('canvasWidth', canvasWidth);
     volumetricRenderingShader.setUniform('canvasHeight', canvasHeight);
     volumetricRenderingShader.setUniform('volumeScale', volume.max);
-    volumetricRenderingShader.setUniform('doRefinement', 1);
+    volumetricRenderingShader.setUniform('doRefinement', 0);
 
     await frontSideShader.load();
     await backSideShader.load();
@@ -135,4 +145,24 @@ function paint(){
         renderer.setRenderTarget(null);
         renderer.render(scene, camera);
     }
+}
+
+function onChangeCompositing() {
+    let val = document.getElementsByName('compositing_method')[0].value;
+
+    switch (val) {
+        case 'mip': default:
+            compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
+            break;
+        case 'first_hit':
+            compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT;
+            break;
+    }
+
+    volumetricRenderingShader.setCompositingMethod(compositingMethod);
+    if (compositingMethod === VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT) {
+        volumetricRenderingShader.setIsoValue(isoValue);
+    }
+
+    paint();
 }

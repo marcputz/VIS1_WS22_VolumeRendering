@@ -7,21 +7,21 @@ uniform sampler2D frontSideTexture;
 uniform int canvasWidth;
 uniform int canvasHeight;
 uniform float volumeScale;
+uniform int doRefinement;
 
 uniform int raycasting_method;
 uniform float iso_value;
-uniform int doRefinement;
 
 const int MAX_STEPS = 1024;
 const float STEP_SIZE = 0.5;
-const int REFINE_STEPS = 8;
+const int REFINE_STEPS = 4;
 
 vec3 getBackSideCoords(vec2 fragCoords);
 vec3 getFrontSideCoords(vec2 fragCoords);
 vec3 getRay(vec2 fragCoords);
 
-float raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps);
-float raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps);
+void raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps);
+void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps);
 
 float getDensity(vec3 dataPosition);
 vec4 valueToColor(float val);
@@ -50,14 +50,10 @@ void main(){
     // sample the data values by the chosen raycasting method
     float density = 0.0;
     if (raycasting_method == 0) {       // MIP = 0
-        density = raycast_mip(startPos, rayDirection, nSteps);
+        raycast_mip(startPos, rayDirection, nSteps);
     } else {                            // First Hit = 1
-        density = raycast_first_hit(startPos, rayDirection, nSteps);
+        raycast_first_hit(startPos, rayDirection, nSteps);
     }
-
-    gl_FragColor = valueToColor(density);
-
-    return;
 }
 
 float getDensity(vec3 dataPosition) {
@@ -83,38 +79,76 @@ vec3 getRay(vec2 fragCoords) {
     return (backSideCoords - frontSideCoords);
 }
 
-float raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
+void raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
 
     float maxVal = -1e6;
-    vec3 loc = startPos;
-    vec3 maxValLoc;
+    vec3 currPos = startPos;
+    vec3 maxValPos;
     vec3 step = (rayDirection * (STEP_SIZE / volumeScale));
 
     for (int i = 0; i < MAX_STEPS; i++) {
         if (i >= nSteps) {
             break;
         }
-        float val = getDensity(loc);
+        float val = getDensity(currPos);
         if (val > maxVal) {
             maxVal = val;
-            maxValLoc = loc;
+            maxValPos = currPos;
         }
-        loc += step;
+        currPos += step;
     }
 
     if (doRefinement == 1) {
         vec3 refStep = step / float(REFINE_STEPS);
-        vec3 refLoc = maxValLoc - refStep * (float(REFINE_STEPS) / 2.0);
+        vec3 refPos = maxValPos - refStep * (float(REFINE_STEPS) / 2.0);
 
         for (int i = 0; i < REFINE_STEPS; i++) {
-            maxVal = max(maxVal, getDensity(refLoc));
-            refLoc += refStep;
+            maxVal = max(maxVal, getDensity(refPos));
+            refPos += refStep;
         }
     }
 
-    return maxVal;
+    gl_FragColor = valueToColor(maxVal);
+    return;
 }
 
-float raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
-    return 0.5;
+void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
+
+    vec3 step = (rayDirection * (STEP_SIZE / volumeScale));
+    vec3 prevPos = startPos;
+    vec3 currPos = startPos + step;
+
+    float prevDensity = 0.0;
+    float currDensity = getDensity(startPos);
+
+    // Check if the ISO Value is in the supported range (0-1)
+    if (iso_value < 0.0 || iso_value > 1.0) {
+        discard;
+    }
+
+    for (int i = 1; i < MAX_STEPS; i++) {
+        if (i >= nSteps) {
+            break;
+        }
+
+        // set previous value as 'prevDensity' and save current one in 'currDensity';
+        prevDensity = getDensity(prevPos);
+        currDensity = getDensity(currPos);
+
+        if (currDensity >= iso_value) {
+
+            float ratio = (iso_value - prevDensity) / (currDensity - iso_value);
+            vec3 interpolatedPos = prevPos + (step * ratio);
+
+            gl_FragColor = vec4(interpolatedPos, 1.0);
+            return;
+        }
+
+        prevPos = currPos;
+        currPos = currPos + step;
+    }
+
+    // display blank fragment if no iso match found
+    gl_FragColor = vec4(0.0);
+    return;
 }
