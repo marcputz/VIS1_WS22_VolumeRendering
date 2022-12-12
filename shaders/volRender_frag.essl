@@ -114,6 +114,10 @@ void raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
 
 void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
 
+    vec3 ambientColor = vec3(0.3, 0.3, 0.3);
+    vec3 lightColor = vec3(1.0, 1.0, 1.0);
+    vec3 lightDirection = normalize(vec3(0.2, 0.2, 0.1));
+
     vec3 step = (rayDirection * (STEP_SIZE / volumeScale));
     vec3 prevPos = startPos;
     vec3 currPos = startPos + step;
@@ -158,7 +162,14 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
             float gradZ = getDensity(firstPointZ) - getDensity(secondPointZ);
             vec3 gradient = 0.5 * vec3(gradX, gradY, gradZ);
 
-            gl_FragColor = vec4(gradient, 1.0);
+            // normalize the gradient to get the normal vector
+            vec3 normal = normalize(gradient);
+
+            // use flat shading to calculate pixel color
+            // Equation Source: http://www.cs.toronto.edu/~kyros/courses/418/Notes/Shading.pdf
+            vec3 myColor = ambientColor + (lightColor * dot(normal,-lightDirection));
+
+            gl_FragColor = vec4(myColor, 1.0);
             return;
         }
 
