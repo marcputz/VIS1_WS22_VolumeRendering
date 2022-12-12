@@ -41,6 +41,7 @@ function init() {
     renderer.setSize( canvasWidth, canvasHeight );
     container.appendChild( renderer.domElement );
 
+    // Render Targets for the first render pass
     backSide = new THREE.WebGLRenderTarget(canvasHeight, canvasWidth);
     frontSide = new THREE.WebGLRenderTarget(canvasHeight, canvasWidth);
 
@@ -48,7 +49,7 @@ function init() {
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
-    //testShader = new TestShader([255.0, 255.0, 0.0]);
+    // Create Shader Objects
     volumetricRenderingShader = new VolumetricRenderingShader();
     backSideShader = new FirstPassShader(THREE.BackSide);
     frontSideShader = new FirstPassShader(THREE.FrontSide);
@@ -98,7 +99,7 @@ async function resetVis(){
     // Prepare Shader
     volumetricRenderingShader.setCompositingMethod(compositingMethod);
     if (compositingMethod === VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT) {
-        volumetricRenderingShader.setIsoValue(isoValue);
+        volumetricRenderingShader.setIsoValue(parseFloat(document.getElementsByName('iso_value')[0].value));
     }
 
     // Set Shader Uniforms according to volume
@@ -149,19 +150,16 @@ function paint(){
 function onChangeCompositing() {
     let val = document.getElementsByName('compositing_method')[0].value;
 
-    let shadingCheckbox = document.getElementsByName('first_hit_shading')[0];
-    let shadingCheckboxLabel = document.getElementsByName('first_hit_shading_label')[0];
+    let firstHitSettingsContainer = document.getElementById('first_hit_settings');
 
     switch (val) {
         case 'mip': default:
             compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
-            shadingCheckbox.classList.add('hidden');
-            shadingCheckboxLabel.classList.add('hidden');
+            firstHitSettingsContainer.classList.add('hidden');
             break;
         case 'first_hit':
             compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT;
-            shadingCheckbox.classList.remove('hidden');
-            shadingCheckboxLabel.classList.remove('hidden');
+            firstHitSettingsContainer.classList.remove('hidden');
             break;
     }
 
@@ -176,6 +174,16 @@ function onChangeCompositing() {
 function onChangeFirstHitShadingCB() {
     let val = document.getElementsByName('first_hit_shading')[0].checked;
     volumetricRenderingShader.enableFirstHitShading(val);
+
+    paint();
+}
+
+function onChangeIsoValue() {
+    let val = document.getElementsByName('iso_value')[0].value;
+    volumetricRenderingShader.setIsoValue(parseFloat(val));
+
+    let htmlOutput = document.getElementById('iso_value_output');
+    htmlOutput.innerText = parseFloat(val);
 
     paint();
 }

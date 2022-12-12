@@ -31,3 +31,11 @@ body {
 .hidden {
     display: none;
 }
+
+.myDropdown {
+    border-radius: 0px;
+    background-color: white;
+    color: black;
+    padding: 0.2rem;
+    border: none;
+}
