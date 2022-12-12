@@ -46,7 +46,8 @@ function init() {
     fileInput.addEventListener('change', readFile);
 
     //testShader = new TestShader([255.0, 255.0, 0.0]);
-    volumetricRenderingShader = new VolumetricRenderingShader();
+    volumetricRenderingShader = new VolumetricRenderingShader(VolumetricRenderingShader.RAYCAST_METHOD_MIP);
+    //volumetricRenderingShader.setIsoValue(0.25);
     backSideShader = new FirstPassShader(THREE.BackSide);
     frontSideShader = new FirstPassShader(THREE.FrontSide);
 }
