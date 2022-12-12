@@ -1,46 +1,5 @@
-precision highp float;
-
-varying vec3 positionColor;
-varying vec4 vertexLocalPosition;
-varying vec4 vertexWorldPosition;
-varying vec3 positionNearColor;
-varying vec4 positionNear;
-// NEW
-varying vec4 positionFar;
-
 void main() {
-    positionColor = clamp(position, 0.0, 1.0);
-
-    mat4 mMatrixInversed = inverse(modelMatrix);
-    mat4 vMatrixInversed = inverse(viewMatrix);
-    mat4 mvMatrixInversed = inverse(modelViewMatrix);
-
     vec4 position4 = vec4(position, 1.0);
-    vertexLocalPosition = position4;
-    vec4 position_in_world = modelMatrix * position4;
-    vertexWorldPosition = position_in_world;
-    vec4 position_in_camera = viewMatrix * position_in_world;
-
-    // Look for position on the cameras near plane (z = -1)
-    position_in_camera.z = -position_in_camera.w;
-    positionNear = mvMatrixInversed * position_in_camera;
-    positionNearColor = clamp(positionNear.xyz, 0.0, 1.0);
-    // NEW
-    position_in_camera.z = position_in_camera.w;
-    positionFar = mvMatrixInversed * position_in_camera;
 
     gl_Position = projectionMatrix * modelMatrix * viewMatrix * position4;
-    return;
-
-
-
-    // Look for the corresponding point on the cameras near plane (z = -1 in clipping space)
-    //'position_in_camera.z = -position_in_camera.w;
-    //'vPosNear = mvMatrixInversed * position_in_camera;
-
-    // Do the same for the far plane (z = 1 in clipping space)
-    //'position_in_camera.z = position_in_camera.w;
-    //'vPosFar = mvMatrixInversed * position_in_camera;
-
-    //'gl_Position = projectionMatrix * mvMatrix * position4;
 }

@@ -2,74 +2,93 @@ precision highp float;
 precision mediump sampler3D;
 
 uniform sampler3D data;
-uniform vec3 camera_position;
-uniform float xWidth;
-uniform float yHeight;
-uniform float zDepth;
+uniform sampler2D backSideTexture;
+uniform sampler2D frontSideTexture;
+uniform int canvasWidth;
+uniform int canvasHeight;
+uniform float volumeScale;
 
-varying vec3 positionColor;
-varying vec4 vertexLocalPosition;
-varying vec4 vertexWorldPosition;
-varying vec3 positionNearColor;
-varying vec4 positionNear;
-// NEW
-varying vec4 positionFar;
+const int MAX_STEPS = 1024;
+const float STEP_SIZE = 0.2;
 
-const int MAX_STEPS = 2048;
-const float STEP_SIZE = 1.0;
+vec3 getBackSideCoords(vec2 fragCoords);
+vec3 getFrontSideCoords(vec2 fragCoords);
+vec3 getRay(vec2 fragCoords);
 
-void raycast_mip(vec3 startPos, vec3 step, int steps, vec3 rayDirection);
+float raycast_mip(vec3 startPos, vec3 endPos, vec3 rayDirection, int nSteps);
+
 float getDensity(vec3 dataPosition);
+vec4 valueToColor(float val);
 
 void main(){
-    /* OLD
-    vec3 ray_direction = normalize(positionNear.xyz - camera_position);
-    float distance = dot(positionNear.xyz - vertexLocalPosition.xyz, ray_direction);
-    */
-    // NEW
-    vec3 ray_direction = normalize(positionNear.xyz/positionNear.w - positionFar.xyz/positionFar.w);
-    float distance = dot(positionNear.xyz/positionNear.w - vertexLocalPosition.xyz, ray_direction);
 
-    // Now we have the starting position on the front surface
-    vec3 front = vertexLocalPosition.xyz + (ray_direction * distance);
-    vec3 ray = vertexLocalPosition.xyz - front;
+    // get the fragments position
+    vec2 fragPos = vec2(gl_FragCoord.x / float(canvasWidth), gl_FragCoord.y / float(canvasHeight));
 
-    // NEW
-    int nSteps = int(-distance / STEP_SIZE + 0.5);
-    if (nSteps < 1) { discard; }
-    vec3 step = ((vertexLocalPosition.xyz - front) / vec3(xWidth, yHeight, zDepth)) / float(nSteps);
-    vec3 startLoc = front / vec3(xWidth, yHeight, zDepth);
-    raycast_mip(startLoc, step, nSteps, ray);
-    if (gl_FragColor.a < 0.05) {
+    // get ray direction and length
+    vec3 ray = getRay(fragPos);
+    vec3 rayDirection = normalize(ray);
+    float rayLength = length(ray);
+
+    // get starting and ending positions of the ray on the bounding box
+    vec3 startPos = getFrontSideCoords(fragPos);
+    vec3 endPos = getBackSideCoords(fragPos);
+
+    // calculate the number of steps by dividing the length of the ray throught the relative step size
+    // IMPORTANT: Step size is given in the volume's coordinates, so it has to be scaled down accordingly first
+    int nSteps = int(floor(rayLength / (STEP_SIZE / volumeScale)));
+    if (nSteps < 1) {
         discard;
     }
 
-    //gl_FragColor = vec4(ray, 1.0);
+    // sample the data values by the chosen raycasting method
+    float density = raycast_mip(startPos, endPos, rayDirection, nSteps);
+
+    gl_FragColor = valueToColor(density);
+
+    return;
 }
 
-void raycast_mip(vec3 startPos, vec3 step, int steps, vec3 rayDirection) {
-    // NEW
+float getDensity(vec3 dataPosition) {
+    return texture(data, dataPosition).r;
+}
+
+vec4 valueToColor(float val) {
+    return vec4(vec3(1.0, 1.0, 1.0) * val, 1.0);
+}
+
+vec3 getBackSideCoords(vec2 fragCoords) {
+    return texture2D(backSideTexture, fragCoords).xyz;
+}
+
+vec3 getFrontSideCoords(vec2 fragCoords) {
+    return texture2D(frontSideTexture, fragCoords).xyz;
+}
+
+vec3 getRay(vec2 fragCoords) {
+    vec3 frontSideCoords = getFrontSideCoords(fragCoords);
+    vec3 backSideCoords = getBackSideCoords(fragCoords);
+
+    return (backSideCoords - frontSideCoords);
+}
+
+float raycast_mip(vec3 startPos, vec3 endPos, vec3 rayDirection, int nSteps) {
+
     float maxVal = -1e6;
-    int maxI = 100;
     vec3 loc = startPos;
     vec3 locColor;
 
     for (int i = 0; i < MAX_STEPS; i++) {
-        if (i >= steps) {
+        if (i >= nSteps) {
             break;
         }
         float val = getDensity(loc);
         if (val > maxVal) {
             maxVal = val;
-            maxI = i;
             locColor = loc;
         }
-        loc += step;
+        loc += (rayDirection * (STEP_SIZE / volumeScale));
     }
 
-    gl_FragColor = vec4(vec3(1.0, 1.0, 1.0) * maxVal, 1.0);
-}
-
-float getDensity(vec3 dataPosition) {
-    return texture(data, dataPosition).r;
+    return maxVal;
 }
