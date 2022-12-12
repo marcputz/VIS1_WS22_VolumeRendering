@@ -107,7 +107,6 @@ async function resetVis(){
     volumetricRenderingShader.setUniform('canvasWidth', canvasWidth);
     volumetricRenderingShader.setUniform('canvasHeight', canvasHeight);
     volumetricRenderingShader.setUniform('volumeScale', volume.max);
-    volumetricRenderingShader.setUniform('doRefinement', 0);
 
     await frontSideShader.load();
     await backSideShader.load();

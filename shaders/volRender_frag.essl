@@ -7,7 +7,6 @@ uniform sampler2D frontSideTexture;
 uniform int canvasWidth;
 uniform int canvasHeight;
 uniform float volumeScale;
-uniform int doRefinement;
 
 uniform int raycasting_method;
 uniform float iso_value;
@@ -96,16 +95,6 @@ void raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
             maxValPos = currPos;
         }
         currPos += step;
-    }
-
-    if (doRefinement == 1) {
-        vec3 refStep = step / float(REFINE_STEPS);
-        vec3 refPos = maxValPos - refStep * (float(REFINE_STEPS) / 2.0);
-
-        for (int i = 0; i < REFINE_STEPS; i++) {
-            maxVal = max(maxVal, getDensity(refPos));
-            refPos += refStep;
-        }
     }
 
     gl_FragColor = valueToColor(maxVal);
