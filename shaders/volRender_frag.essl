@@ -137,10 +137,28 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
 
         if (currDensity >= float(iso_value)) {
 
-            float ratio = (iso_value - prevDensity) / (currDensity - iso_value);
-            vec3 interpolatedPos = prevPos + (step * ratio);
+            // Calculate the new position by interpolating the previous and current positions with the iso value
+            float ratio = (float(iso_value) - prevDensity) / (currDensity - float(iso_value));
+            vec3 interpolPos = prevPos + (step * ratio);
 
-            gl_FragColor = vec4(interpolatedPos, 1.0);
+            // Enable this to ignore shading
+            //'gl_FragColor = vec4(interpolatedPos, 1.0);
+            //'return;
+
+            // Calculate the gradient
+            float epsilon = 0.01;
+            vec3 firstPointX = vec3(interpolPos.x - epsilon, interpolPos.y, interpolPos.z);
+            vec3 secondPointX = vec3(interpolPos.x + epsilon, interpolPos.y, interpolPos.z);
+            float gradX = getDensity(firstPointX) - getDensity(secondPointX);
+            vec3 firstPointY = vec3(interpolPos.x, interpolPos.y - epsilon, interpolPos.z);
+            vec3 secondPointY = vec3(interpolPos.x, interpolPos.y + epsilon, interpolPos.z);
+            float gradY = getDensity(firstPointX) - getDensity(secondPointY);
+            vec3 firstPointZ = vec3(interpolPos.x, interpolPos.y, interpolPos.z - epsilon);
+            vec3 secondPointZ = vec3(interpolPos.x, interpolPos.y, interpolPos.z + epsilon);
+            float gradZ = getDensity(firstPointZ) - getDensity(secondPointZ);
+            vec3 gradient = 0.5 * vec3(gradX, gradY, gradZ);
+
+            gl_FragColor = vec4(gradient, 1.0);
             return;
         }
 
