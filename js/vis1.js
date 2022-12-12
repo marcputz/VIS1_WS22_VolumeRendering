@@ -65,7 +65,7 @@ function readFile(){
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
 
-        console.log('Volume Data: ', volume);
+        // console.log('Volume Data: ', volume);
 
         resetVis();
     };
@@ -149,12 +149,19 @@ function paint(){
 function onChangeCompositing() {
     let val = document.getElementsByName('compositing_method')[0].value;
 
+    let shadingCheckbox = document.getElementsByName('first_hit_shading')[0];
+    let shadingCheckboxLabel = document.getElementsByName('first_hit_shading_label')[0];
+
     switch (val) {
         case 'mip': default:
             compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
+            shadingCheckbox.classList.add('hidden');
+            shadingCheckboxLabel.classList.add('hidden');
             break;
         case 'first_hit':
             compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT;
+            shadingCheckbox.classList.remove('hidden');
+            shadingCheckboxLabel.classList.remove('hidden');
             break;
     }
 
@@ -162,6 +169,13 @@ function onChangeCompositing() {
     if (compositingMethod === VolumetricRenderingShader.RAYCAST_METHOD_FIRST_HIT) {
         volumetricRenderingShader.setIsoValue(isoValue);
     }
+
+    paint();
+}
+
+function onChangeFirstHitShadingCB() {
+    let val = document.getElementsByName('first_hit_shading')[0].checked;
+    volumetricRenderingShader.enableFirstHitShading(val);
 
     paint();
 }

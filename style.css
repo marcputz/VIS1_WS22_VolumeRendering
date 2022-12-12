@@ -27,3 +27,7 @@ body {
     border-radius: 50%;
     margin: 1px;
 }
+
+.hidden {
+    display: none;
+}

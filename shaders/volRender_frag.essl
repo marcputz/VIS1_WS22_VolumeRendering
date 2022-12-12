@@ -10,6 +10,7 @@ uniform float volumeScale;
 
 uniform int raycasting_method;
 uniform float iso_value;
+uniform int enable_first_hit_shading;
 
 const int MAX_STEPS = 1024;
 const float STEP_SIZE = 0.5;
@@ -134,32 +135,36 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
             float ratio = (float(iso_value) - prevDensity) / (currDensity - float(iso_value));
             vec3 interpolPos = prevPos + (step * ratio);
 
-            // Enable this to ignore shading
-            //'gl_FragColor = vec4(interpolatedPos, 1.0);
-            //'return;
+            if (enable_first_hit_shading == 0) {
 
-            // Calculate the gradient
-            float epsilon = 0.01;
-            vec3 firstPointX = vec3(interpolPos.x - epsilon, interpolPos.y, interpolPos.z);
-            vec3 secondPointX = vec3(interpolPos.x + epsilon, interpolPos.y, interpolPos.z);
-            float gradX = getDensity(firstPointX) - getDensity(secondPointX);
-            vec3 firstPointY = vec3(interpolPos.x, interpolPos.y - epsilon, interpolPos.z);
-            vec3 secondPointY = vec3(interpolPos.x, interpolPos.y + epsilon, interpolPos.z);
-            float gradY = getDensity(firstPointX) - getDensity(secondPointY);
-            vec3 firstPointZ = vec3(interpolPos.x, interpolPos.y, interpolPos.z - epsilon);
-            vec3 secondPointZ = vec3(interpolPos.x, interpolPos.y, interpolPos.z + epsilon);
-            float gradZ = getDensity(firstPointZ) - getDensity(secondPointZ);
-            vec3 gradient = 0.5 * vec3(gradX, gradY, gradZ);
+                gl_FragColor = vec4(interpolPos, 1.0);
+                return;
 
-            // normalize the gradient to get the normal vector
-            vec3 normal = normalize(gradient);
+            } else {
 
-            // use flat shading to calculate pixel color
-            // Equation Source: http://www.cs.toronto.edu/~kyros/courses/418/Notes/Shading.pdf
-            vec3 myColor = ambientColor + (lightColor * dot(normal,-lightDirection));
+                // Calculate the gradient
+                float epsilon = 0.01;
+                vec3 firstPointX = vec3(interpolPos.x - epsilon, interpolPos.y, interpolPos.z);
+                vec3 secondPointX = vec3(interpolPos.x + epsilon, interpolPos.y, interpolPos.z);
+                float gradX = getDensity(firstPointX) - getDensity(secondPointX);
+                vec3 firstPointY = vec3(interpolPos.x, interpolPos.y - epsilon, interpolPos.z);
+                vec3 secondPointY = vec3(interpolPos.x, interpolPos.y + epsilon, interpolPos.z);
+                float gradY = getDensity(firstPointX) - getDensity(secondPointY);
+                vec3 firstPointZ = vec3(interpolPos.x, interpolPos.y, interpolPos.z - epsilon);
+                vec3 secondPointZ = vec3(interpolPos.x, interpolPos.y, interpolPos.z + epsilon);
+                float gradZ = getDensity(firstPointZ) - getDensity(secondPointZ);
+                vec3 gradient = 0.5 * vec3(gradX, gradY, gradZ);
 
-            gl_FragColor = vec4(myColor, 1.0);
-            return;
+                // normalize the gradient to get the normal vector
+                vec3 normal = normalize(gradient);
+
+                // use flat shading to calculate pixel color
+                // Equation Source: http://www.cs.toronto.edu/~kyros/courses/418/Notes/Shading.pdf
+                vec3 myColor = ambientColor + (lightColor * dot(normal,-lightDirection));
+
+                gl_FragColor = vec4(myColor, 1.0);
+                return;
+            }
         }
 
         prevPos = currPos;
