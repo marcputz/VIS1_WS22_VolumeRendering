@@ -24,6 +24,9 @@ let backSideScene, frontSideScene;
 let backSide, frontSide;
 let backSideShader, frontSideShader;
 
+// color picker
+let isoColor1;
+
 let compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
 
 /**
@@ -98,6 +101,8 @@ async function resetVis(){
     // Prepare Shader
     volumetricRenderingShader.setCompositingMethod(compositingMethod);
     volumetricRenderingShader.setIsoValue(0.3); // Standard Value
+    document.getElementById('colorPicker').value = '#808080';
+    volumetricRenderingShader.setIsoColor(new THREE.Vector3(128, 128, 128));
 
     // Set Shader Uniforms according to volume
     await volumetricRenderingShader.load();
@@ -180,4 +185,27 @@ function onChangeIsoValue() {
     htmlOutput.innerText = parseFloat(val);
 
     paint();
+}
+
+function onChangeColor() {
+    let col = document.getElementById('colorPicker').value;
+    isoColor1 = normalizeRGB(hexToRGB(col));
+    console.log(isoColor1);
+    volumetricRenderingShader.setIsoColor(new THREE.Vector3(isoColor1[0], isoColor1[1], isoColor1[2]));
+
+    paint();
+}
+
+function hexToRGB(hex) {
+    return hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+        ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+        .substring(1).match(/.{2}/g)
+        .map(x => parseInt(x, 16));
+}
+
+function normalizeRGB(rgb) {
+    rgb[0] /= 255;
+    rgb[1] /= 255;
+    rgb[2] /= 255;
+    return rgb;
 }

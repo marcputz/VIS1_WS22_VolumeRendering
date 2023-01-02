@@ -14,6 +14,10 @@ class VolumetricRenderingShader extends Shader {
         this.setUniform('iso_value', isoVal);
     }
 
+    setIsoColor(isoColor) {
+        this.setUniform('iso_color', isoColor);
+    }
+
     setCompositingMethod(raycast_method) {
         this.setUniform('raycasting_method', raycast_method);
     }
