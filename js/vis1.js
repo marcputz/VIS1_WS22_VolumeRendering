@@ -30,15 +30,10 @@ let hWidth = 450 - hMargin.left - hMargin.right, hHeight = 390 - hMargin.top - h
 let x, y, min, max, binMaxLen, bins, xAxis, yAxis, histogram, densityData, canvas, svg;
 
 let isoColor1 = [255, 56, 56];
-let isoColor2 = [56, 255, 56];
 
 let isoAlpha1 = 1.0;
-let isoAlpha2 = 1.0;
 
 let isoValue1 = 0.3;
-let isoValue2 = 0.5;
-
-let usingSecondIsoPlain = false;
 
 let compositingMethod = VolumetricRenderingShader.RAYCAST_METHOD_MIP;
 
@@ -119,10 +114,6 @@ async function resetVis(){
     volumetricRenderingShader.setIsoAlpha(isoAlpha1);
     volumetricRenderingShader.setIsoColor(new THREE.Vector3(isoColor1[0]/255, isoColor1[1]/255, isoColor1[2]/255));
 
-    volumetricRenderingShader.setSecondIsoValue(isoValue2);
-    volumetricRenderingShader.setSecondIsoAlpha(isoAlpha2);
-    volumetricRenderingShader.setSecondIsoColor(new THREE.Vector3(isoColor2[0]/255, isoColor2[1]/255, isoColor2[2]/255));
-
     setUIElementTextAndValues();
 
     // Set Shader Uniforms according to volume
@@ -199,121 +190,63 @@ function onChangeFirstHitShadingCB() {
     paint();
 }
 
-function onChangeIsoValue(plainNumber) {
-    if (plainNumber === 1) {
-        let val = parseFloat(document.getElementsByName('iso_value')[0].value);
-        isoValue1 = val;
+function onChangeIsoValue() {
+    let val = parseFloat(document.getElementsByName('iso_value')[0].value);
+    isoValue1 = val;
 
-        volumetricRenderingShader.setIsoValue(val);
-        let htmlOutput = document.getElementById('iso_value_output');
-        htmlOutput.innerText = val;
+    volumetricRenderingShader.setIsoValue(val);
+    let htmlOutput = document.getElementById('iso_value_output');
+    htmlOutput.innerText = val;
 
-        svg.select(".circle1")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("cx", x(parseFloat(val)));
+    svg.select(".circle1")
+        .transition()
+        .ease(d3.easeLinear)
+        .duration(50)
+        .attr("cx", x(parseFloat(val)));
 
-        svg.select(".alpharect1")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4));
-
-    } else {
-        let val = parseFloat(document.getElementsByName('iso_value2')[0].value);
-        isoValue2 = val;
-
-        volumetricRenderingShader.setSecondIsoValue(val);
-        let htmlOutput = document.getElementById('iso_value_output2');
-        htmlOutput.innerText = val;
-
-        svg.select(".circle2")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("cx", x(parseFloat(val)));
-
-        svg.select(".alpharect2")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4));
-    }
+    svg.select(".alpharect1")
+        .transition()
+        .ease(d3.easeLinear)
+        .duration(50)
+        .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4));
 
     paint();
 }
 
-function onChangeColor(plainNumber) {
-    if (plainNumber === 1) {
-        let col = document.getElementById('colorPicker').value;
+function onChangeColor() {
+    let col = document.getElementById('colorPicker').value;
 
-        isoColor1 = hexToRGB(col);
-        volumetricRenderingShader.setIsoColor(new THREE.Vector3(isoColor1[0]/255, isoColor1[1]/255, isoColor1[2]/255));
+    isoColor1 = hexToRGB(col);
+    volumetricRenderingShader.setIsoColor(new THREE.Vector3(isoColor1[0]/255, isoColor1[1]/255, isoColor1[2]/255));
 
-        svg.select(".circle1")
-            .style("fill", col);
+    svg.select(".circle1")
+        .style("fill", col);
 
-        svg.select(".alpharect1")
-            .style("fill", col);
-
-    } else {
-        let col = document.getElementById('colorPicker2').value;
-
-        isoColor2 = hexToRGB(col);
-        volumetricRenderingShader.setSecondIsoColor(new THREE.Vector3(isoColor2[0]/255, isoColor2[1]/255, isoColor2[2])/255);
-
-        svg.select(".circle2")
-            .style("fill", col);
-
-        svg.select(".alpharect2")
-            .style("fill", col);
-    }
+    svg.select(".alpharect1")
+        .style("fill", col);
 
     paint();
 }
 
-function onChangeIsoAlpha(plainNumber) {
-    if (plainNumber === 1) {
-        let alpha = parseFloat(document.getElementsByName('iso_alpha')[0].value);
+function onChangeIsoAlpha() {
+    let alpha = parseFloat(document.getElementsByName('iso_alpha')[0].value);
 
-        isoAlpha1 = alpha;
-        volumetricRenderingShader.setIsoAlpha(alpha);
-        let htmlOutput = document.getElementById('iso_alpha_output');
-        htmlOutput.innerText = alpha;
+    isoAlpha1 = alpha;
+    volumetricRenderingShader.setIsoAlpha(alpha);
+    let htmlOutput = document.getElementById('iso_alpha_output');
+    htmlOutput.innerText = alpha;
 
-        svg.select(".circle1")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("cy", y(isoAlpha1));
-        svg.select(".alpharect1")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("height", hHeight - y(isoAlpha1))
-            .attr("transform", "translate(" + x(bins[0].x0) + "," + y(isoAlpha1) + ")")
-
-    } else {
-        let alpha = parseFloat(document.getElementsByName('iso_alpha2')[0].value);
-
-        isoAlpha2 = alpha;
-        volumetricRenderingShader.setSecondIsoAlpha(alpha);
-        let htmlOutput = document.getElementById('iso_alpha_output2');
-        htmlOutput.innerText = alpha;
-
-        svg.select(".circle2")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("cy", y(isoAlpha2));
-        svg.select(".alpharect2")
-            .transition()
-            .ease(d3.easeLinear)
-            .duration(50)
-            .attr("height", hHeight - y(isoAlpha2))
-            .attr("transform", "translate(" + x(bins[0].x0) + "," + y(isoAlpha2) + ")")
-    }
+    svg.select(".circle1")
+        .transition()
+        .ease(d3.easeLinear)
+        .duration(50)
+        .attr("cy", y(isoAlpha1));
+    svg.select(".alpharect1")
+        .transition()
+        .ease(d3.easeLinear)
+        .duration(50)
+        .attr("height", hHeight - y(isoAlpha1))
+        .attr("transform", "translate(" + x(bins[0].x0) + "," + y(isoAlpha1) + ")")
 
     paint();
 }
@@ -330,43 +263,6 @@ function RGBToHex(r, g, b) {
         const hex = v.toString(16);
         return hex.length === 1 ? '0' + hex : hex
     }).join('');
-}
-
-function toggleSecondIsoPlain() {
-    let secondIsoButton = document.getElementById('second_iso_toggle');
-    let secondIsoOptions = document.getElementById('secondIsoOptions');
-
-    if (!usingSecondIsoPlain) {
-        secondIsoButton.innerText = "Zweite Oberfläche entfernen";
-        secondIsoOptions.classList.remove('hideSecondIso');
-        addSecondPlainToHistogram();
-        volumetricRenderingShader.enableSecondIsoPlain(true);
-    } else {
-        secondIsoButton.innerText = "Zweite Oberfläche hinzufügen";
-        secondIsoOptions.classList.add('hideSecondIso');
-        svg.select(".circle2").remove();
-        svg.select(".alpharect2").remove();
-        volumetricRenderingShader.enableSecondIsoPlain(false);
-    }
-
-    usingSecondIsoPlain = !usingSecondIsoPlain;
-}
-
-function addSecondPlainToHistogram() {
-    svg.append("circle")
-        .classed("circle2", true)
-        .attr("r", hHeight / 50)
-        .style("fill", RGBToHex(isoColor2[0], isoColor2[1], isoColor2[2]))
-        .attr("cx", x(isoValue2))
-        .attr("cy", y(isoAlpha2));
-
-    svg.append("rect")
-        .classed("alpharect2", true)
-        .attr("width", (x(bins[0].x1) - x(bins[0].x0) - 1)/2)
-        .attr("height", hHeight - y(isoAlpha2))
-        .attr("x", x(isoValue2) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4))
-        .attr("transform", "translate(" + x(bins[0].x0) + "," + y(isoAlpha2) + ")")
-        .attr("fill", RGBToHex(isoColor2[0], isoColor2[1], isoColor2[2]))
 }
 
 function initHistogram() {
@@ -432,9 +328,6 @@ function initHistogram() {
         .attr("transform", "translate(" + x(bins[0].x0) + "," + y(isoAlpha1) + ")")
         .attr("fill", RGBToHex(isoColor1[0], isoColor1[1], isoColor1[2]));
 
-    if (usingSecondIsoPlain) {
-        addSecondPlainToHistogram();
-    }
 }
 
 function setUIElementTextAndValues() {
@@ -443,10 +336,4 @@ function setUIElementTextAndValues() {
     document.getElementById('iso_alpha').value = isoAlpha1;
     document.getElementById('iso_alpha_output').innerText = isoAlpha1;
     document.getElementById('colorPicker').value = RGBToHex(isoColor1[0], isoColor1[1], isoColor1[2]);
-
-    document.getElementById('iso_value2').value = isoValue2;
-    document.getElementById('iso_value_output2').innerText = isoValue2;
-    document.getElementById('iso_alpha2').value = isoAlpha2;
-    document.getElementById('iso_alpha_output2').innerText = isoAlpha2;
-    document.getElementById('colorPicker2').value = RGBToHex(isoColor2[0], isoColor2[1], isoColor2[2]);
 }

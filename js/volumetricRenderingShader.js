@@ -14,24 +14,12 @@ class VolumetricRenderingShader extends Shader {
         this.setUniform('iso_value', isoVal);
     }
 
-    setSecondIsoValue(isoVal) {
-        this.setUniform('iso_value_two', isoVal);
-    }
-
     setIsoAlpha(isoAlpha) {
         this.setUniform('iso_alpha', isoAlpha);
     }
 
-    setSecondIsoAlpha(isoAlpha) {
-        this.setUniform('iso_alpha_two', isoAlpha);
-    }
-
     setIsoColor(isoColor) {
         this.setUniform('iso_color', isoColor);
-    }
-
-    setSecondIsoColor(isoColor) {
-        this.setUniform('iso_color_two', isoColor);
     }
 
     setCompositingMethod(raycast_method) {
@@ -40,10 +28,6 @@ class VolumetricRenderingShader extends Shader {
 
     enableFirstHitShading(enable) {
         this.setUniform('enable_first_hit_shading', enable ? 1 : 0);
-    }
-
-    enableSecondIsoPlain(enable) {
-        this.setUniform('enable_second_iso_plain', enable ? 1 : 0);
     }
 
     setCameraPosition(cameraPos) {
