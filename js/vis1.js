@@ -27,9 +27,8 @@ let backSideShader, frontSideShader;
 // histogram stuff
 let hMargin = {top: 10, right: 30, bottom: 30, left: 40}
 let hWidth = 450 - hMargin.left - hMargin.right, hHeight = 390 - hMargin.top - hMargin.bottom;
-let x, y, min, max, binMaxLen, bins, xAxis, yAxis, histogram, densityData, canvas, bars, svg;
+let x, y, min, max, binMaxLen, bins, xAxis, yAxis, histogram, densityData, canvas, svg;
 
-// color picker
 let isoColor1 = [255, 56, 56];
 let isoColor2 = [56, 255, 56];
 
@@ -113,7 +112,6 @@ async function resetVis(){
 
     // our camera orbits around an object centered at (0,0,0)
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
-    console.log(orbitCamera);
 
     // Prepare Shader
     volumetricRenderingShader.setCompositingMethod(compositingMethod);
@@ -202,7 +200,6 @@ function onChangeFirstHitShadingCB() {
 }
 
 function onChangeIsoValue(plainNumber) {
-
     if (plainNumber === 1) {
         let val = parseFloat(document.getElementsByName('iso_value')[0].value);
         isoValue1 = val;
@@ -221,7 +218,8 @@ function onChangeIsoValue(plainNumber) {
             .transition()
             .ease(d3.easeLinear)
             .duration(50)
-            .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4))
+            .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4));
+
     } else {
         let val = parseFloat(document.getElementsByName('iso_value2')[0].value);
         isoValue2 = val;
@@ -240,14 +238,13 @@ function onChangeIsoValue(plainNumber) {
             .transition()
             .ease(d3.easeLinear)
             .duration(50)
-            .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4))
+            .attr("x", x(parseFloat(val)) - ((x(bins[0].x1) - x(bins[0].x0) - 1)/4));
     }
 
     paint();
 }
 
 function onChangeColor(plainNumber) {
-
     if (plainNumber === 1) {
         let col = document.getElementById('colorPicker').value;
 
@@ -259,6 +256,7 @@ function onChangeColor(plainNumber) {
 
         svg.select(".alpharect1")
             .style("fill", col);
+
     } else {
         let col = document.getElementById('colorPicker2').value;
 
@@ -276,7 +274,6 @@ function onChangeColor(plainNumber) {
 }
 
 function onChangeIsoAlpha(plainNumber) {
-
     if (plainNumber === 1) {
         let alpha = parseFloat(document.getElementsByName('iso_alpha')[0].value);
 
@@ -335,13 +332,6 @@ function RGBToHex(r, g, b) {
     }).join('');
 }
 
-function normalizeRGB(rgb) {
-    rgb[0] /= 255;
-    rgb[1] /= 255;
-    rgb[2] /= 255;
-    return rgb;
-}
-
 function toggleSecondIsoPlain() {
     let secondIsoButton = document.getElementById('second_iso_toggle');
     let secondIsoOptions = document.getElementById('secondIsoOptions');
@@ -390,7 +380,7 @@ function initHistogram() {
         .attr("transform", "translate(" + hMargin.left + "," + hMargin.top + ")");
 
     x = d3.scaleLinear()
-        .domain([0, 1 /*d3.max(densityData)*/])
+        .domain([0, 1])
         .range([0, hWidth]);
     svg.append("g")
         .attr("transform", "translate(0," + hHeight + ")")
@@ -406,7 +396,7 @@ function initHistogram() {
     binMaxLen = d3.max(bins, function(d) { return d.length; })
 
     y = d3.scaleSqrt()
-        .domain([0, 1 /*d3.max(bins, function(d) { return d.length; })*/])
+        .domain([0, 1])
         .range([hHeight, 0]);
 
     svg.append("g")
@@ -418,7 +408,7 @@ function initHistogram() {
         .append("rect")
         .attr("x", x)
         .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length/binMaxLen) + ")"; })
-        .attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
+        .attr("width", function(d) { return (x(d.x1) - x(d.x0)) === 0 ? (x(d.x1) - x(d.x0)) : (x(d.x1) - x(d.x0) - 1); })
         .style("fill", "steelblue");
 
     svg.selectAll("rect")

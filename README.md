@@ -3,7 +3,16 @@
 Load one of the provided volume files through the GUI. 
 Rotate the orbit camera around the bounding box using the left mouse button. Zoom using the scroll wheel. 
 
-**TODO: complete this section!** (how to use the editor etc.)
+You can change the compositing method by choosing the desired method from the dropdown menu on the right. You can choose between: 
+* Maximum Intensity Projection (MIP)
+* First Hit Compositing
+
+When using First Hit Compositing, a new menu will appear below the dropdown.
+* You can use the "Use Shading" toggle to switch Phong-shading on or off.
+* At the bottom you can set the details for the ISO value used by First Hit Compositing.
+  * By clicking on the "Color" field, you can change the desired color.
+  * Using the ISO value slider you can set your desired ISO value.
+  * Using the ISO Alpha slider you can set your desired transparency.
 
 ## Framework Description
 

@@ -113,9 +113,7 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
 
     vec3 ambientColor = vec3(0.3, 0.3, 0.3);
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    //vec3 lightColor = vec3(0.7, 0.7, 0.7);
     vec3 lightPos = vec3(-1.0, -1.0, -0.5);
-    vec3 lightDirection = normalize(vec3(0.2, 0.2, 0.1));
     vec3 viewPos = normalize(camera_pos);
 
     vec3 step = (rayDirection * (STEP_SIZE / volumeScale));
@@ -175,10 +173,6 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
                 vec3 reflectDir = reflect(-lightDir, normal);
                 float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
                 vec3 specular = 1.0 * spec * lightColor;
-
-                // use flat shading to calculate pixel color
-                // Equation Source: http://www.cs.toronto.edu/~kyros/courses/418/Notes/Shading.pdf
-                //vec3 myColor = ambientColor + (lightColor * dot(normal,-lightDirection));
 
                 vec3 myColor = (ambientColor + diffuse + specular) * iso_color;
 
