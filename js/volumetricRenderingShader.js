@@ -46,4 +46,8 @@ class VolumetricRenderingShader extends Shader {
         this.setUniform('enable_second_iso_plain', enable ? 1 : 0);
     }
 
+    setCameraPosition(cameraPos) {
+        this.setUniform('camera_pos', cameraPos);
+    }
+
 }

@@ -26,7 +26,7 @@ let backSideShader, frontSideShader;
 
 // histogram stuff
 let hMargin = {top: 10, right: 30, bottom: 30, left: 40}
-let hWidth = 350 - hMargin.left - hMargin.right, hHeight = 290 - hMargin.top - hMargin.bottom;
+let hWidth = 450 - hMargin.left - hMargin.right, hHeight = 390 - hMargin.top - hMargin.bottom;
 let x, y, min, max, binMaxLen, bins, xAxis, yAxis, histogram, densityData, canvas, bars, svg;
 
 // color picker
@@ -113,6 +113,7 @@ async function resetVis(){
 
     // our camera orbits around an object centered at (0,0,0)
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
+    console.log(orbitCamera);
 
     // Prepare Shader
     volumetricRenderingShader.setCompositingMethod(compositingMethod);
@@ -164,6 +165,7 @@ function paint(){
         // pass the rendered front and back faces to the raycasting shader, it is used to determine the ray directions
         volumetricRenderingShader.setUniform('backSideTexture', backSide.texture);
         volumetricRenderingShader.setUniform('frontSideTexture', frontSide.texture);
+        volumetricRenderingShader.setCameraPosition(new THREE.Vector3(orbitCamera.camera.position.x, orbitCamera.camera.position.y, orbitCamera.camera.position.z));
 
         // second render pass (renders the final image by raycasting)
         renderer.setRenderTarget(null);
