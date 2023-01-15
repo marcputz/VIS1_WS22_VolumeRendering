@@ -397,7 +397,7 @@ function initHistogram() {
     histogram = d3.histogram()
         .value(function(d) { return d; })
         .domain(x.domain())
-        .thresholds(x.ticks(50));
+        .thresholds(x.ticks(100));
 
     bins = histogram(densityData);
 
@@ -414,7 +414,7 @@ function initHistogram() {
         .data(bins)
         .enter()
         .append("rect")
-        .attr("x", 1)
+        .attr("x", x + 0.5)
         .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length/binMaxLen) + ")"; })
         .attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
         .style("fill", "steelblue");
