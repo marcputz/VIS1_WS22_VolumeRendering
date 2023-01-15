@@ -32,6 +32,10 @@ body {
     display: none;
 }
 
+.hideSecondIso {
+    display: none;
+}
+
 .myDropdown {
     border-radius: 0px;
     background-color: white;

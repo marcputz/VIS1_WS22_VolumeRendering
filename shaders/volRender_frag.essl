@@ -10,7 +10,12 @@ uniform float volumeScale;
 
 uniform int raycasting_method;
 uniform float iso_value;
+uniform float iso_alpha;
 uniform vec3 iso_color;
+uniform float iso_value_two;
+uniform float iso_alpha_two;
+uniform vec3 iso_color_two;
+uniform int enable_second_iso_plain;
 uniform int enable_first_hit_shading;
 
 const int MAX_STEPS = 1024;
@@ -105,8 +110,8 @@ void raycast_mip(vec3 startPos, vec3 rayDirection, int nSteps) {
 
 void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
 
-    //vec3 ambientColor = vec3(0.3, 0.3, 0.3);
-    vec3 ambientColor = iso_color;
+    vec3 ambientColor = vec3(0.3, 0.3, 0.3);
+    //vec3 ambientColor = iso_color;
     //vec3 lightColor = vec3(1.0, 1.0, 1.0);
     vec3 lightColor = vec3(0.7, 0.7, 0.7);
     vec3 lightDirection = normalize(vec3(0.2, 0.2, 0.1));
@@ -140,8 +145,8 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
 
             if (enable_first_hit_shading == 0) {
 
-                //gl_FragColor = vec4(interpolPos, 1.0);
-                gl_FragColor = vec4(iso_color.x * interpolPos.x, iso_color.y * interpolPos.y , iso_color.z * interpolPos.z, 1.0);
+                gl_FragColor = vec4(interpolPos, iso_alpha);
+                //gl_FragColor = vec4(iso_color.x * interpolPos.x, iso_color.y * interpolPos.y , iso_color.z * interpolPos.z, iso_alpha);
                 return;
 
             } else {
@@ -162,11 +167,14 @@ void raycast_first_hit(vec3 startPos, vec3 rayDirection, int nSteps) {
                 // normalize the gradient to get the normal vector
                 vec3 normal = normalize(gradient);
 
+                //vec3 lightdir = normalize(lightPos - interpolPos);
+
                 // use flat shading to calculate pixel color
                 // Equation Source: http://www.cs.toronto.edu/~kyros/courses/418/Notes/Shading.pdf
-                vec3 myColor = ambientColor + (lightColor * dot(normal,-lightDirection));
+                //vec3 myColor = ambientColor + (lightColor * dot(normal,-lightDirection));
+                vec3 myColor = (ambientColor + (lightColor * dot(normal,-lightDirection))) * iso_color;
 
-                gl_FragColor = vec4(myColor, 1.0);
+                gl_FragColor = vec4(myColor, iso_alpha);
                 return;
             }
         }
