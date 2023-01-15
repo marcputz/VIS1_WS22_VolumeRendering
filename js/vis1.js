@@ -405,7 +405,6 @@ function initHistogram() {
 
     binMaxLen = d3.max(bins, function(d) { return d.length; })
 
-    y = d3.scaleLinear()
     y = d3.scaleSqrt()
         .domain([0, 1 /*d3.max(bins, function(d) { return d.length; })*/])
         .range([hHeight, 0]);
