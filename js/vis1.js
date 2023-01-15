@@ -404,6 +404,7 @@ function initHistogram() {
     binMaxLen = d3.max(bins, function(d) { return d.length; })
 
     y = d3.scaleLinear()
+    y = d3.scaleSqrt()
         .domain([0, 1 /*d3.max(bins, function(d) { return d.length; })*/])
         .range([hHeight, 0]);
 
@@ -414,7 +415,7 @@ function initHistogram() {
         .data(bins)
         .enter()
         .append("rect")
-        .attr("x", x + 0.5)
+        .attr("x", x)
         .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length/binMaxLen) + ")"; })
         .attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
         .style("fill", "steelblue");
